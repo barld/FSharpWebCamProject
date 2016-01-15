@@ -18,31 +18,8 @@ namespace Demo
             InitializeComponent();
         }
 
-        private double f(int i)
-        {
-            var f1 = 59894 - (8128 * i) + (262 * i * i) - (1.6 * i * i * i);
-            return f1;
-        }
-
         private void Form1_Load(object sender, EventArgs e)
         {
-            chart.Series.Clear();
-            var series1 = new System.Windows.Forms.DataVisualization.Charting.Series
-            {
-                Name = "Series1",
-                Color = System.Drawing.Color.Green,
-                IsVisibleInLegend = false,
-                IsXValueIndexed = true,
-                ChartType = SeriesChartType.Line
-            };
-
-            this.chart.Series.Add(series1);
-
-            for (int i = 0; i < 100; i++)
-            {
-                series1.Points.AddXY(i, f(i));
-            }
-            chart.Invalidate();
         }
 
         Random rnd = new Random();
@@ -71,6 +48,7 @@ namespace Demo
                 IsVisibleInLegend = false,
                 IsXValueIndexed = true,
                 ChartType = SeriesChartType.Column
+                
             };
 
             this.chart.Series.Add(series1);
@@ -79,6 +57,9 @@ namespace Demo
             {
                 series1.Points.AddXY(p.Item1,p.Item2);
             }
+            chart.ChartAreas[0].AxisX.Minimum = 0;
+            chart.ChartAreas[0].AxisX.Maximum = 36;
+
             chart.Invalidate();
 
             bussy = false;
