@@ -20,7 +20,7 @@ namespace Demo
             InitializeComponent();
         }
 
-        private GraphForm gForm;
+        //private GraphForm gForm;
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -34,8 +34,8 @@ namespace Demo
                 if( comboBoxCameras.Items.Count > 0 )
                     comboBoxCameras.SelectedIndex = 0;
 
-                gForm = new GraphForm();
-                gForm.Show();
+                //gForm = new GraphForm();
+                //gForm.Show();
             }
         }
 
@@ -77,7 +77,7 @@ namespace Demo
                 setFrameSource(new CameraFrameSource(c));
                 _frameSource.Camera.CaptureWidth = 640;
                 _frameSource.Camera.CaptureHeight = 480;
-                _frameSource.Camera.Fps = 25;
+                _frameSource.Camera.Fps = 15;
                 _frameSource.NewFrame += OnImageCaptured;
 
 
@@ -100,13 +100,28 @@ namespace Demo
             }
         }
 
-        Random rnd = new Random();
+        int frameIndex = 0;
+        IEnumerable<Tuple<float, Double>> referenceFrame;
+        private double referenceDotProduct;
+
 
         public void OnImageCaptured(IFrameSource frameSource, Frame frame, double fps)
         {
             _latestFrame = frame.Image;
-
-            gForm.Update(frameSource, frame.Image);
+            frameIndex++;
+            if(frameIndex == 15)
+            {
+                referenceFrame = BitmapConverting.getHHistogramData(frame.Image);
+                referenceDotProduct = BitmapConverting.calculateDotProduct(referenceFrame, referenceFrame);
+            }
+            else if(frameIndex % 15 == 0 && frameIndex > 15)
+            {
+                if (referenceDotProduct * 0.75 < BitmapConverting.calculateDotProduct(referenceFrame, BitmapConverting.getHHistogramData(frame.Image)))
+                    this.isInButton.BackColor = Color.Green;
+                else
+                    this.isInButton.BackColor = Color.Red;
+            }
+            
 
             pictureBoxDisplay.Invalidate();
         }

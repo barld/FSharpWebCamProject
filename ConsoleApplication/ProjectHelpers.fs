@@ -11,5 +11,6 @@ module ProjectHelpers
         pb.Image <- bitmap
         pb.Dock <- DockStyle.Fill
         pb.SizeMode <- PictureBoxSizeMode.StretchImage
+        pb.BringToFront()
         pb.Update()
         form

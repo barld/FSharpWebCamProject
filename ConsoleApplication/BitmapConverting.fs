@@ -57,11 +57,16 @@ module BitmapConverting
                 | _ -> failwith "error in code"
 
             {h=(h |> abs);s=s;v=maxv}
+        
 
-    let getHHistogramData bitmap =
-        bitmap
-        |> ToRGB
-        |> Array.map RGBToHSV
-        |> Array.map (fun hsv -> hsv.h |> int)
-        |> Array.sort
-        |> Array.countBy (fun h -> h/10)
+    let getHHistogramData (bitmap: Bitmap) =
+        let pixels = (bitmap.Height * bitmap.Width) |> float
+        let hsvArray = 
+            bitmap
+            |> ToRGB
+            |> Array.map RGBToHSV
+
+        [for i in [0.0f..1.0f..35.0f] -> (i*10.f, (hsvArray |> Array.filter(fun hsv -> (i/36.f) <= hsv.h / 360.f && hsv.h / 360.f < ((i+1.f)/36.f)) |> Array.length |> float)/ pixels)] |> List.toSeq
+ 
+    let calculateDotProduct (list1: (float32 * float) seq) list2 =
+        list1 |> Seq.map2 (fun (a,b) (c,d) -> b*d ) list2 |> Seq.sum

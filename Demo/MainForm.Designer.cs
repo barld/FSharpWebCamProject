@@ -42,6 +42,7 @@
             this.cameraPropertyValueTypeSelection = new System.Windows.Forms.ComboBox();
             this.cameraPropertyValueValue = new System.Windows.Forms.NumericUpDown();
             this.cameraPropertyValueAuto = new System.Windows.Forms.CheckBox();
+            this.isInButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxDisplay)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cameraPropertyValueValue)).BeginInit();
             this.SuspendLayout();
@@ -193,11 +194,23 @@
             this.cameraPropertyValueAuto.UseVisualStyleBackColor = true;
             this.cameraPropertyValueAuto.CheckedChanged += new System.EventHandler(this.cameraPropertyValueAuto_CheckedChanged);
             // 
+            // isInButton
+            // 
+            this.isInButton.BackColor = System.Drawing.Color.Red;
+            this.isInButton.Enabled = false;
+            this.isInButton.Location = new System.Drawing.Point(391, 513);
+            this.isInButton.Name = "isInButton";
+            this.isInButton.Size = new System.Drawing.Size(75, 23);
+            this.isInButton.TabIndex = 23;
+            this.isInButton.Text = "is in";
+            this.isInButton.UseVisualStyleBackColor = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(708, 590);
+            this.Controls.Add(this.isInButton);
             this.Controls.Add(this.cameraPropertyValueAuto);
             this.Controls.Add(this.cameraPropertyValueValue);
             this.Controls.Add(this.cameraPropertyValueTypeSelection);
@@ -240,6 +253,7 @@
         private System.Windows.Forms.ComboBox cameraPropertyValueTypeSelection;
         private System.Windows.Forms.NumericUpDown cameraPropertyValueValue;
         private System.Windows.Forms.CheckBox cameraPropertyValueAuto;
+        private System.Windows.Forms.Button isInButton;
     }
 }
 
