@@ -1,11 +1,10 @@
 ﻿
-
-
 module BitmapConverting
-    type rgb = {r:byte;g:byte;b:byte;a:byte}
-    type hsv = {h:float32;s:float32;v:float32}
 
     open System.Drawing
+
+    type rgb = {r:byte;g:byte;b:byte;a:byte}
+    type hsv = {h:float32;s:float32;v:float32}
 
     let ToRGB (bmp : System.Drawing.Bitmap) =
         match bmp.PixelFormat with
@@ -34,39 +33,93 @@ module BitmapConverting
             rtw
         | _ -> failwith "not suported format"
 
-    //https://nl.wikipedia.org/wiki/HSV_(kleurruimte)#Omzetting_van_RGB_naar_HSV
-    let RGBToHSV (rgb:rgb) =
-        let getFloat32 (b:byte) = (b|>float32)/255.0f
-
-        let r, g, b = getFloat32 rgb.r, getFloat32 rgb.g, getFloat32 rgb.b
+    let RGBToH (rgb:rgb) =
+        let r, g, b = (rgb.r |> float32) / 255.f, (rgb.g |> float32) / 255.f, (rgb.b |> float32) / 255.f
 
         let maxv = max (max r g) b
         let minv = min (min r g) b
 
         if maxv = minv then
-            {h=0.0f;s=0.0f;v=maxv}
+            0.0f
         else
-            let s = (maxv-minv)/maxv
+            match maxv with
+            | m when r=m -> (g-b)/(maxv-minv)
+            | m when g=m -> 2.0f + (b-r)/(maxv-minv)
+            | m when b=m -> 4.0f + (r-g)/(maxv-minv)
+            | _ -> failwith "error in code"
+            / 6.0f |> abs
 
-            let h = 
-                60.0f *
-                match maxv with
-                | m when r=m -> (g-b)/(maxv-minv)
-                | m when g=m -> 2.0f + (b-r)/(maxv-minv)
-                | m when b=m -> 4.0f + (r-g)/(maxv-minv)
-                | _ -> failwith "error in code"
+    let groupByI projection (array: 't array ) =
+        array
+        |> Array.mapi (fun i item -> i,item)
+        |> Array.groupBy projection
+        |> Array.map (fun (a,b) -> a, b |> Array.map snd) 
 
-            {h=(h |> abs);s=s;v=maxv}
-        
+    let splitInParts (width,wParts) (height,hParts) array =
+        let w = width / wParts
+        let h = height / hParts 
+        array
+        |> groupByI (fun (index, item) -> ((index%width)/w, (index/width)/h))
 
-    let getHHistogramData (bitmap: Bitmap) =
-        let pixels = (bitmap.Height * bitmap.Width) |> float
-        let hsvArray = 
-            bitmap
-            |> ToRGB
-            |> Array.map RGBToHSV
+    type HHistrogram = 
+        {data:float list; x:int; y:int}
 
-        [for i in [0.0f..1.0f..35.0f] -> (i*10.f, (hsvArray |> Array.filter(fun hsv -> (i/36.f) <= hsv.h / 360.f && hsv.h / 360.f < ((i+1.f)/36.f)) |> Array.length |> float)/ pixels)] |> List.toSeq
- 
-    let calculateDotProduct (list1: (float32 * float) seq) list2 =
-        list1 |> Seq.map2 (fun (a,b) (c,d) -> b*d ) list2 |> Seq.sum
+    let getHHistogramData (rgb: rgb[]) =
+        let pixels = rgb |> Array.length |> float
+        let hArray =
+            rgb
+            |> Array.map RGBToH
+    
+        [for i in [0.0f..1.0f..19.0f] -> (hArray |> Array.filter(fun h -> (i/20.f) <= h && h < ((i+1.f)/20.f)) |> Array.length |> float) / pixels];
+
+    let calculateDotProduct list1 list2 =
+        list1 |> List.map2 (fun a b -> a * b ) list2 |> List.sum
+
+    let yellowCardReference = [0.002083333333; 0.0; 0.0; 0.5058854167; 0.4874479167; 0.004583333333; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+
+    let redCardReference = [0.9999153646; 8.463541667e-05; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
+
+
+    let isYellow (histogrm:HHistrogram) =
+        0.5 < calculateDotProduct yellowCardReference histogrm.data
+
+    let isRed (histogrm:HHistrogram) =
+        0.5 < calculateDotProduct redCardReference histogrm.data
+
+    let markRedSectors (bmp:Bitmap) histograms wParts hParts =
+        let redsectores = histograms |> Array.filter (fun histo -> isRed histo)
+        match bmp.PixelFormat with
+        | Imaging.PixelFormat.Format32bppArgb ->
+            let rect = new Rectangle(0,0,bmp.Width,bmp.Height)
+            let bmpData = bmp.LockBits(rect, Imaging.ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            // Get the address of the first line.
+            let ptr = bmpData.Scan0;
+    
+            // Declare an array to hold the bytes of the bitmap.
+            let bytes = (abs bmpData.Stride) * bmp.Height;
+            let rgbValues : byte array = Array.create bytes 0uy
+
+            // Copy the RGB values into the array.
+            System.Runtime.InteropServices.Marshal.Copy(ptr, rgbValues, 0, bytes);
+
+            let w = bmp.Width / wParts
+            let h = bmp.Height / hParts 
+
+            for histo in redsectores do    
+                for i in 0..(bmp.Width * bmp.Height)-1 do
+                    if (i%bmp.Width)/w = histo.x && (i/bmp.Width)/h = histo.y then
+                        do rgbValues.[i*4+2] <- 255uy
+
+            // Copy the RGB values back to the bitmap
+            System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
+
+            bmp.UnlockBits(bmpData)
+            () 
+        | _ -> failwith "not suported format"
+
+    let getHistoGrams (bm:Bitmap) x y = 
+        bm
+        |> ToRGB
+        |> splitInParts (bm.Width, x) (bm.Height, y) 
+        |> Array.map (fun ((x,y), pixels) -> {x=x;y=y;data= getHHistogramData pixels})

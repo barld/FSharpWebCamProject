@@ -8,4 +8,3 @@
 #r "System.Drawing.dll"
 #r "../../WebCamLib/bin/Debug/Win32/WebCamLib.dll"
 #r "System.Windows.Forms.dll"
-#r "PresentationCore.dll"

@@ -77,7 +77,7 @@ namespace Demo
                 setFrameSource(new CameraFrameSource(c));
                 _frameSource.Camera.CaptureWidth = 640;
                 _frameSource.Camera.CaptureHeight = 480;
-                _frameSource.Camera.Fps = 15;
+                _frameSource.Camera.Fps = 1;
                 _frameSource.NewFrame += OnImageCaptured;
 
 
@@ -101,29 +101,21 @@ namespace Demo
         }
 
         int frameIndex = 0;
-        IEnumerable<Tuple<float, Double>> referenceFrame;
-        private double referenceDotProduct;
-
+        BitmapConverting.HHistrogram[] histograms = null;
 
         public void OnImageCaptured(IFrameSource frameSource, Frame frame, double fps)
         {
             _latestFrame = frame.Image;
-            frameIndex++;
-            if(frameIndex == 15)
+            if (frameIndex % 2 == 0)
             {
-                referenceFrame = BitmapConverting.getHHistogramData(frame.Image);
-                referenceDotProduct = BitmapConverting.calculateDotProduct(referenceFrame, referenceFrame);
-            }
-            else if(frameIndex % 15 == 0 && frameIndex > 15)
-            {
-                if (referenceDotProduct * 0.75 < BitmapConverting.calculateDotProduct(referenceFrame, BitmapConverting.getHHistogramData(frame.Image)))
-                    this.isInButton.BackColor = Color.Green;
-                else
-                    this.isInButton.BackColor = Color.Red;
-            }
-            
+                histograms = BitmapConverting.getHistoGrams(_latestFrame, 8, 8);
 
-            pictureBoxDisplay.Invalidate();
+                BitmapConverting.markRedSectors(_latestFrame, histograms, 8, 8);
+                pictureBoxDisplay.Invalidate();
+            }
+            frameIndex++;
+
+            
         }
 
         private void setFrameSource(CameraFrameSource cameraFrameSource)
