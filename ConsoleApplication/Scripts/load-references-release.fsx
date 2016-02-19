@@ -7,3 +7,4 @@
 #r "System.Drawing.dll"
 #r "System.Numerics.dll"
 #r "../../WebCamLib/bin/Release/Win32/WebCamLib.dll"
+#r "System.Windows.Forms.dll"

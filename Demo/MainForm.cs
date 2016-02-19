@@ -77,7 +77,7 @@ namespace Demo
                 setFrameSource(new CameraFrameSource(c));
                 _frameSource.Camera.CaptureWidth = 640;
                 _frameSource.Camera.CaptureHeight = 480;
-                _frameSource.Camera.Fps = 1;
+                _frameSource.Camera.Fps = 2;
                 _frameSource.NewFrame += OnImageCaptured;
 
 
@@ -106,13 +106,11 @@ namespace Demo
         public void OnImageCaptured(IFrameSource frameSource, Frame frame, double fps)
         {
             _latestFrame = frame.Image;
-            if (frameIndex % 2 == 0)
-            {
-                histograms = BitmapConverting.getHistoGrams(_latestFrame, 8, 8);
+            histograms = BitmapConverting.getHistoGrams(_latestFrame, 8, 8);
 
-                BitmapConverting.markRedSectors(_latestFrame, histograms, 8, 8);
-                pictureBoxDisplay.Invalidate();
-            }
+            BitmapConverting.markRedSectors(_latestFrame, histograms, 8, 8);
+            pictureBoxDisplay.Invalidate();
+            
             frameIndex++;
 
             

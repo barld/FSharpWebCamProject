@@ -106,13 +106,14 @@ module BitmapConverting
             let w = bmp.Width / wParts
             let h = bmp.Height / hParts 
 
-            for histo in redsectores do    
-                for i in 0..(bmp.Width * bmp.Height)-1 do
-                    if (i%bmp.Width)/w = histo.x && (i/bmp.Width)/h = histo.y then
-                        do rgbValues.[i*4+2] <- 255uy
+            for histo in redsectores do   
+                for x in [0..w-1] do
+                    for y in [0..h-1] do
+                        do rgbValues.[(y*bmp.Width + h*bmp.Width*histo.y + w * histo.x + x) * 4 + 1] <- 255uy
 
             // Copy the RGB values back to the bitmap
             System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
+            
 
             bmp.UnlockBits(bmpData)
             () 
